@@ -5,6 +5,7 @@
 
 package io.opentelemetry.api.trace;
 
+import io.opentelemetry.context.Context;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -69,4 +70,9 @@ public interface Tracer {
    * @return a {@code Span.Builder} to create and start a new {@code Span}.
    */
   SpanBuilder spanBuilder(String spanName);
+
+  default boolean shouldStartSpan(SpanKind kind, InstrumentationType type, Context context) {
+    // noop, never start span without sdk
+    return false;
+  }
 }

@@ -5,9 +5,12 @@
 
 package io.opentelemetry.sdk.trace;
 
+import io.opentelemetry.api.trace.InstrumentationType;
 import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.TracerProvider;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 
 /** {@link SdkTracer} is SDK implementation of {@link Tracer}. */
@@ -43,5 +46,10 @@ final class SdkTracer implements Tracer {
    */
   InstrumentationLibraryInfo getInstrumentationLibraryInfo() {
     return instrumentationLibraryInfo;
+  }
+
+  @Override
+  public boolean shouldStartSpan(SpanKind kind, InstrumentationType type, Context context) {
+    return !InstrumentationKeys.exists(kind, type, context);
   }
 }

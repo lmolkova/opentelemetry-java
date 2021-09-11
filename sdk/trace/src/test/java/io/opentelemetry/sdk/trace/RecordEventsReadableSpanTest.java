@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.InstrumentationType;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
@@ -933,7 +934,8 @@ class RecordEventsReadableSpanTest {
             attributes,
             links,
             1,
-            0);
+            0,
+            InstrumentationType.NONE);
     Mockito.verify(spanProcessor, Mockito.times(1)).onStart(Context.root(), span);
     return span;
   }
@@ -1021,7 +1023,8 @@ class RecordEventsReadableSpanTest {
             attributesWithCapacity,
             Collections.singletonList(link1),
             1,
-            0);
+            0,
+            InstrumentationType.NONE);
     long startEpochNanos = clock.now();
     clock.advanceMillis(4);
     long firstEventEpochNanos = clock.now();

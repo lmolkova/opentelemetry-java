@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenLocal()
+}
+
+description = 'OpenTelemetry Examples for Instrumentation'
+ext.moduleName = "io.opentelemetry.examples.instrumentation"
+
+dependencies {
+    compile "io.opentelemetry:opentelemetry-context:1.4.0-SNAPSHOT"
+    compile "io.opentelemetry:opentelemetry-api:1.4.0-SNAPSHOT"
+    compile "io.opentelemetry:opentelemetry-sdk:1.4.0-SNAPSHOT"
+    compile "io.opentelemetry:opentelemetry-exporter-logging:1.4.0-SNAPSHOT"
+    implementation "io.grpc:grpc-context"
+}
+
+jar {
+    manifest {
+        attributes("Class-Path": configurations.runtimeClasspath.collect { it.getName() }.join(' '),
+                "Main-Class": 'io.opentelemetry.example.instrumentation.InstrumentationExample')
+    }
+
+    from(configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }) {}
+}
