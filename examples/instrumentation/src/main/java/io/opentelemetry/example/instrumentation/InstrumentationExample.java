@@ -44,16 +44,16 @@ class InstrumentationExample {
     // new method for optimization only:
     //   - instrumentation needs to know if attributes should to be collected beforehand
     //   - avoid context re-injection
-    if (tracer.shouldStartSpan(SpanKind.CLIENT, InstrumentationType.MESSAGING, Context.current())) {
+    if (tracer.shouldStartSpan(SpanKind.CLIENT, InstrumentationType.DB, Context.current())) {
 
-      System.out.println("Starting MESSAGING CLIENT span");
+      System.out.println("Starting DB CLIENT span");
 
       Span span =
           tracer
-              .spanBuilder("send")
+              .spanBuilder("query")
               .setSpanKind(SpanKind.CLIENT)
               // new method: spans have types
-              .setType(InstrumentationType.MESSAGING)
+              .setType(InstrumentationType.DB)
               .startSpan();
 
       Context context = span.storeInContext(Context.current());
@@ -61,30 +61,39 @@ class InstrumentationExample {
 
       try (Scope scope = span.makeCurrent()) {
 
-        System.out.println(
-            "Should start another MESSAGING span? "
-                + tracer.shouldStartSpan(
-                    SpanKind.CLIENT, InstrumentationType.MESSAGING, Context.current()));
+        System.out.printf("current %s-%s", Span.current().getSpanContext().getTraceId(), Span.current().getSpanContext().getSpanId());
 
-        // ideally instrumentation should stop if shouldStartSpan returns false for the best
-        // efficiency
+        System.out.println(
+            "Should start another DB span? "
+                + tracer.shouldStartSpan(SpanKind.CLIENT, InstrumentationType.DB, Context.current()));
+
+        // efficient instrumentation should stop if shouldStartSpan returns false
         // but doesn't have to - nothing bad happens, it's just a bit less efficient
         Span duplicateSpan =
             tracer
-                .spanBuilder("send")
+                .spanBuilder("query")
                 .setSpanKind(SpanKind.CLIENT)
-                .setType(InstrumentationType.MESSAGING)
+                .setType(InstrumentationType.DB)
                 .startSpan();
+
+        // noop
+        try (Scope scope2 = duplicateSpan.makeCurrent()) {
+          System.out.printf("duplicate current %s-%s\n", Span.current().getSpanContext().getTraceId(), Span.current().getSpanContext().getSpanId());
+          Span.current().setAttribute("foo", 1);
+        }
+
+        Span.current().setAttribute("bar", 2);
 
         // duplicate span is propagating and not recording
         // context is valid, so it will be injected
         // good news: it's the same one as was already injected
-        // bad news: it's not super-efficient, so it's better to pre-check shouldStartSpan
+        // bad news: it's not super-efficient, so it's better to pre-check with shouldStartSpan
         System.out.println("DuplicateSpan isRecording? " + duplicateSpan.isRecording());
+
         context = duplicateSpan.storeInContext(context);
         propagator.inject(context, requestContext, setter);
 
-        // assuming new child (non-Messaging) span starts
+        // assuming new child (non-DB) span starts
         System.out.println(
             "Should start HTTP span? "
                 + tracer.shouldStartSpan(SpanKind.CLIENT, InstrumentationType.HTTP, context));
@@ -98,9 +107,9 @@ class InstrumentationExample {
                 .startSpan();
 
         System.out.println("HTTP span isRecording? " + httpSpan.isRecording());
-
         httpSpan.end();
 
+        // noop
         duplicateSpan.end();
       }
 

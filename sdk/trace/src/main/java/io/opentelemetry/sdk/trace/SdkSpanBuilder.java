@@ -17,6 +17,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
@@ -185,7 +186,7 @@ final class SdkSpanBuilder implements SpanBuilder {
     final SpanContext parentSpanContext = parentSpan.getSpanContext();
 
     if (InstrumentationKeys.exists(spanKind, type, parentContext)) {
-      return Span.wrap(parentSpanContext);
+      return new SuppressedSpan(parentSpanContext);
     }
 
     final String traceId;
@@ -272,5 +273,116 @@ final class SdkSpanBuilder implements SpanBuilder {
   // Visible for testing
   static boolean isSampled(SamplingDecision decision) {
     return SamplingDecision.RECORD_AND_SAMPLE.equals(decision);
+  }
+
+
+  class SuppressedSpan implements Span {
+
+    private final SpanContext spanContext;
+
+    SuppressedSpan(SpanContext spanContext) {
+      this.spanContext = spanContext;
+    }
+
+    @Override
+    public Span setAttribute(String key, String value) {
+      return this;
+    }
+
+    @Override
+    public Span setAttribute(String key, long value) {
+      return this;
+    }
+
+    @Override
+    public Span setAttribute(String key, double value) {
+      return this;
+    }
+
+    @Override
+    public Span setAttribute(String key, boolean value) {
+      return this;
+    }
+
+    @Override
+    public <T> Span setAttribute(AttributeKey<T> key, T value) {
+      return this;
+    }
+
+    @Override
+    public Span setAllAttributes(Attributes attributes) {
+      return this;
+    }
+
+    @Override
+    public Span addEvent(String name) {
+      return this;
+    }
+
+    @Override
+    public Span addEvent(String name, long timestamp, TimeUnit unit) {
+      return this;
+    }
+
+    @Override
+    public Span addEvent(String name, Attributes attributes) {
+      return this;
+    }
+
+    @Override
+    public Span addEvent(String name, Attributes attributes, long timestamp, TimeUnit unit) {
+      return this;
+    }
+
+    @Override
+    public Span setStatus(StatusCode statusCode) {
+      return this;
+    }
+
+    @Override
+    public Span setStatus(StatusCode statusCode, String description) {
+      return this;
+    }
+
+    @Override
+    public Span recordException(Throwable exception) {
+      return this;
+    }
+
+    @Override
+    public Span recordException(Throwable exception, Attributes additionalAttributes) {
+      return this;
+    }
+
+    @Override
+    public Span updateName(String name) {
+      return this;
+    }
+
+    @Override
+    public void end() {}
+
+    @Override
+    public void end(long timestamp, TimeUnit unit) {}
+
+    @Override
+    public SpanContext getSpanContext() {
+      return spanContext;
+    }
+
+    @Override
+    public boolean isRecording() {
+      return false;
+    }
+
+    @Override
+    public String toString() {
+      return "SuppressedSpan{" + spanContext + '}';
+    }
+
+    @Override
+    public Context storeInContext(Context context) {
+      return context;
+    }
   }
 }

@@ -53,8 +53,6 @@ class InstrumentationKeys {
     ContextKey<Boolean> key =
         keys.computeIfAbsent(contextKeyName, (name) -> ContextKey.named(name));
 
-    // todo: if present and already set?
-
     return context.with(key, true);
   }
 
@@ -63,7 +61,7 @@ class InstrumentationKeys {
       case KIND:
         return kind.toString();
       case KIND_AND_TYPE:
-        return kind.toString() + "-" + type.toString();
+        return kind + "-" + type;
       default:
         return "none";
     }

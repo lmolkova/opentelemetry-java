@@ -39,10 +39,5 @@ subprojects {
         implementation platform("io.grpc:grpc-bom:${grpcVersion}")
     }
 
-    spotless {
-        java {
-            targetExclude '**/generated/**'
-            googleJavaFormat("1.9")
-        }
-    }
+
 }
