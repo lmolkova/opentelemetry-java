@@ -12,7 +12,6 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.trace.InstrumentationType;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanContext;
@@ -47,7 +46,6 @@ final class SdkSpanBuilder implements SpanBuilder {
   @Nullable private List<LinkData> links;
   private int totalNumberOfLinksAdded = 0;
   private long startEpochNanos = 0;
-  private InstrumentationType type = InstrumentationType.NONE;
 
   SdkSpanBuilder(
       String spanName,
@@ -168,16 +166,6 @@ final class SdkSpanBuilder implements SpanBuilder {
   }
 
   @Override
-  public SpanBuilder setType(InstrumentationType type) {
-    if (type == null || type == InstrumentationType.NONE) {
-      return this;
-    }
-
-    this.type = type;
-    return this;
-  }
-
-  @Override
   @SuppressWarnings({"unchecked", "rawtypes"})
   public Span startSpan() {
     final Context parentContext = parent == null ? Context.current() : parent;
@@ -185,7 +173,7 @@ final class SdkSpanBuilder implements SpanBuilder {
     final Span parentSpan = Span.fromContext(parentContext);
     final SpanContext parentSpanContext = parentSpan.getSpanContext();
 
-    if (InstrumentationKeys.exists(spanKind, type, parentContext)) {
+    if (InstrumentationKeys.exists(spanKind, instrumentationLibraryInfo.getInstrumentationType(), parentContext)) {
       return new SuppressedSpan(parentSpanContext);
     }
 
@@ -251,8 +239,7 @@ final class SdkSpanBuilder implements SpanBuilder {
         recordedAttributes,
         immutableLinks,
         totalNumberOfLinksAdded,
-        startEpochNanos,
-        type);
+        startEpochNanos);
   }
 
   private static Clock getClock(Span parent, Clock clock) {

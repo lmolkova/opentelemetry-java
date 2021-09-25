@@ -5,7 +5,6 @@
 
 package io.opentelemetry.sdk.trace;
 
-import io.opentelemetry.api.trace.InstrumentationType;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -28,8 +27,8 @@ class InstrumentationKeys {
           System.getProperty("suppression-strategy", SuppressionStrategy.NONE.toString()));
   private static final Map<String, ContextKey<Boolean>> keys = new ConcurrentHashMap<>();
 
-  public static boolean exists(SpanKind kind, InstrumentationType type, Context context) {
-    if (kind == SpanKind.INTERNAL || type == InstrumentationType.NONE) {
+  public static boolean exists(SpanKind kind, String type, Context context) {
+    if (kind == SpanKind.INTERNAL  || type == null || type.equals("NONE")) {
       return false;
     }
 
@@ -42,9 +41,10 @@ class InstrumentationKeys {
     return value == null ? false : value;
   }
 
-  public static Context storeInContext(SpanKind kind, InstrumentationType type, Context context) {
+  public static Context storeInContext(SpanKind kind, String type, Context context) {
     if (kind == SpanKind.INTERNAL
-        || type == InstrumentationType.NONE
+        || type == null
+        || type.equals("NONE")
         || SUPPRESSION_STRATEGY == SuppressionStrategy.NONE) {
       return context;
     }
@@ -56,7 +56,7 @@ class InstrumentationKeys {
     return context.with(key, true);
   }
 
-  private static String getContextKeyName(SpanKind kind, InstrumentationType type) {
+  private static String getContextKeyName(SpanKind kind, String type) {
     switch (SUPPRESSION_STRATEGY) {
       case KIND:
         return kind.toString();

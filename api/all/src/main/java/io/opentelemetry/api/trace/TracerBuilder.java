@@ -29,6 +29,10 @@ public interface TracerBuilder {
    */
   TracerBuilder setInstrumentationVersion(String instrumentationVersion);
 
+  default TracerBuilder setInstrumentationType(InstrumentationType type) {
+    return  this;
+  }
+
   /**
    * Gets or creates a {@link Tracer} instance.
    *

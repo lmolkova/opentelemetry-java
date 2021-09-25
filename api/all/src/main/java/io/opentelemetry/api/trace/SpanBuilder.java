@@ -292,20 +292,6 @@ public interface SpanBuilder {
   }
 
   /**
-   * Sets instrumentation type.
-   *
-   * @param type type.
-   * @return this.
-   */
-  default SpanBuilder setType(InstrumentationType type) {
-    if (type == null) {
-      return this;
-    }
-
-    return this;
-  }
-
-  /**
    * Starts a new {@link Span}.
    *
    * <p>Users <b>must</b> manually call {@link Span#end()} to end this {@code Span}.

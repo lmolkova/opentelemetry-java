@@ -50,7 +50,7 @@ public final class ComponentRegistry<V> {
    * @return the registered value associated with this name and version.
    */
   public final V get(String instrumentationName, @Nullable String instrumentationVersion) {
-    return get(instrumentationName, instrumentationVersion, null);
+    return get(instrumentationName, instrumentationVersion, null, null);
   }
 
   /**
@@ -66,9 +66,10 @@ public final class ComponentRegistry<V> {
   public final V get(
       String instrumentationName,
       @Nullable String instrumentationVersion,
-      @Nullable String schemaUrl) {
+      @Nullable String schemaUrl,
+      @Nullable String instrumentationType) {
     InstrumentationLibraryInfo instrumentationLibraryInfo =
-        InstrumentationLibraryInfo.create(instrumentationName, instrumentationVersion, schemaUrl);
+        InstrumentationLibraryInfo.create(instrumentationName, instrumentationVersion, schemaUrl, instrumentationType);
 
     // Optimistic lookup, before creating the new component.
     V component = registry.get(instrumentationLibraryInfo);

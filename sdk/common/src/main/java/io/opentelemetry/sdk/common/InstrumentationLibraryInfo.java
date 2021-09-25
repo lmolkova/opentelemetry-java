@@ -31,7 +31,7 @@ public abstract class InstrumentationLibraryInfo {
    */
   public static InstrumentationLibraryInfo create(String name, @Nullable String version) {
     requireNonNull(name, "name");
-    return new AutoValue_InstrumentationLibraryInfo(name, version, null);
+    return new AutoValue_InstrumentationLibraryInfo(name, version, null, null);
   }
 
   /**
@@ -46,9 +46,9 @@ public abstract class InstrumentationLibraryInfo {
    * @since 1.4.0
    */
   public static InstrumentationLibraryInfo create(
-      String name, @Nullable String version, @Nullable String schemaUrl) {
+      String name, @Nullable String version, @Nullable String schemaUrl, @Nullable String type) {
     requireNonNull(name, "name");
-    return new AutoValue_InstrumentationLibraryInfo(name, version, schemaUrl);
+    return new AutoValue_InstrumentationLibraryInfo(name, version, schemaUrl, type);
   }
 
   /**
@@ -84,6 +84,9 @@ public abstract class InstrumentationLibraryInfo {
    */
   @Nullable
   public abstract String getSchemaUrl();
+
+  @Nullable
+  public abstract String getInstrumentationType();
 
   // Package protected ctor to avoid others to extend this class.
   InstrumentationLibraryInfo() {}

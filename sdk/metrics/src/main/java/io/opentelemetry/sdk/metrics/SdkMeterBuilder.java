@@ -35,6 +35,6 @@ class SdkMeterBuilder implements MeterBuilder {
 
   @Override
   public Meter build() {
-    return registry.get(instrumentationName, instrumentationVersion, schemaUrl);
+    return registry.get(instrumentationName, instrumentationVersion, schemaUrl, null);
   }
 }

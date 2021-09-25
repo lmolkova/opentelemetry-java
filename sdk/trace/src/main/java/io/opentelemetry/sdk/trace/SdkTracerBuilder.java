@@ -5,6 +5,7 @@
 
 package io.opentelemetry.sdk.trace;
 
+import io.opentelemetry.api.trace.InstrumentationType;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.TracerBuilder;
 import io.opentelemetry.sdk.internal.ComponentRegistry;
@@ -15,6 +16,7 @@ class SdkTracerBuilder implements TracerBuilder {
   private final String instrumentationName;
   private String instrumentationVersion;
   private String schemaUrl;
+  private String instrumentationType;
 
   SdkTracerBuilder(ComponentRegistry<SdkTracer> registry, String instrumentationName) {
     this.registry = registry;
@@ -34,7 +36,14 @@ class SdkTracerBuilder implements TracerBuilder {
   }
 
   @Override
+  public TracerBuilder setInstrumentationType(InstrumentationType type) {
+    this.instrumentationType = type.toString();
+    return this;
+  }
+
+  @Override
   public Tracer build() {
-    return registry.get(instrumentationName, instrumentationVersion, schemaUrl);
+    // todo same name and version -> same type?
+    return registry.get(instrumentationName, instrumentationVersion, schemaUrl, instrumentationType);
   }
 }

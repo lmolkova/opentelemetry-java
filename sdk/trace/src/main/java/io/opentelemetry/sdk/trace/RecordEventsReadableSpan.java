@@ -9,7 +9,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.internal.GuardedBy;
-import io.opentelemetry.api.trace.InstrumentationType;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
@@ -68,8 +67,6 @@ final class RecordEventsReadableSpan implements ReadWriteSpan {
   // Lock used to internally guard the mutable state of this instance
   private final Object lock = new Object();
 
-  private final InstrumentationType instrumentationType;
-
   @GuardedBy("lock")
   private String name;
   // Set of recorded attributes. DO NOT CALL any other method that changes the ordering of events.
@@ -106,8 +103,7 @@ final class RecordEventsReadableSpan implements ReadWriteSpan {
       @Nullable AttributesMap attributes,
       List<LinkData> links,
       int totalRecordedLinks,
-      long startEpochNanos,
-      InstrumentationType instrumentationType) {
+      long startEpochNanos) {
     this.context = context;
     this.instrumentationLibraryInfo = instrumentationLibraryInfo;
     this.parentSpanContext = parentSpanContext;
@@ -123,7 +119,6 @@ final class RecordEventsReadableSpan implements ReadWriteSpan {
     this.attributes = attributes;
     this.events = new ArrayList<>();
     this.spanLimits = spanLimits;
-    this.instrumentationType = instrumentationType;
   }
 
   /**
@@ -156,8 +151,7 @@ final class RecordEventsReadableSpan implements ReadWriteSpan {
       AttributesMap attributes,
       List<LinkData> links,
       int totalRecordedLinks,
-      long startEpochNanos,
-      InstrumentationType instrumentationType) {
+      long startEpochNanos) {
     RecordEventsReadableSpan span =
         new RecordEventsReadableSpan(
             context,
@@ -172,8 +166,7 @@ final class RecordEventsReadableSpan implements ReadWriteSpan {
             attributes,
             links,
             totalRecordedLinks,
-            startEpochNanos == 0 ? clock.now() : startEpochNanos,
-            instrumentationType);
+            startEpochNanos == 0 ? clock.now() : startEpochNanos);
     // Call onStart here instead of calling in the constructor to make sure the span is completely
     // initialized.
     spanProcessor.onStart(parentContext, span);
@@ -556,7 +549,7 @@ final class RecordEventsReadableSpan implements ReadWriteSpan {
 
   @Override
   public Context storeInContext(Context context) {
-    context = InstrumentationKeys.storeInContext(kind, instrumentationType, context);
+    context = InstrumentationKeys.storeInContext(kind, instrumentationLibraryInfo.getInstrumentationType(), context);
     return ReadWriteSpan.super.storeInContext(context);
   }
 }

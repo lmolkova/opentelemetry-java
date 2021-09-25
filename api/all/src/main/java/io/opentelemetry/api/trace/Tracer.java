@@ -71,7 +71,7 @@ public interface Tracer {
    */
   SpanBuilder spanBuilder(String spanName);
 
-  default boolean shouldStartSpan(SpanKind kind, InstrumentationType type, Context context) {
+  default boolean shouldStartSpan(SpanKind kind, Context context) {
     // noop, never start span without sdk
     return false;
   }

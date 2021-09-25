@@ -28,52 +28,60 @@ class InstrumentationExample {
 
   public static void main(String[] args) {
 
+    SdkTracerProvider provider = SdkTracerProvider.builder()
+        .addSpanProcessor(SimpleSpanProcessor.create(new LoggingSpanExporter()))
+        .build();
+
     OpenTelemetrySdk openTelemetrySdk =
         OpenTelemetrySdk.builder()
             .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
-            .setTracerProvider(
-                SdkTracerProvider.builder()
-                    .addSpanProcessor(SimpleSpanProcessor.create(new LoggingSpanExporter()))
-                    .build())
+            .setTracerProvider(provider)
             .build();
-
-    Tracer tracer = openTelemetrySdk.getTracer("instrumentation-of-my-amazing-library");
     TextMapPropagator propagator = openTelemetrySdk.getPropagators().getTextMapPropagator();
+
+
+    Tracer dbTracer = provider.tracerBuilder("instrumentation-of-my-amazing-library")
+        // new method
+        .setInstrumentationType(InstrumentationType.DB)
+        .build();
+
+    Tracer anotherDbTracer = provider.tracerBuilder("instrumentation-of-another-amazing-library")
+        .setInstrumentationType(InstrumentationType.DB)
+        .build();
+
+    Tracer httpTracer = provider.tracerBuilder("instrumentation-http-client")
+        .setInstrumentationType(InstrumentationType.HTTP)
+        .build();
+
     System.out.println("Suppression strategy: " + System.getProperty("suppression-strategy"));
 
     // new method for optimization only:
     //   - instrumentation needs to know if attributes should to be collected beforehand
     //   - avoid context re-injection
-    if (tracer.shouldStartSpan(SpanKind.CLIENT, InstrumentationType.DB, Context.current())) {
-
+    if (dbTracer.shouldStartSpan(SpanKind.CLIENT, Context.current())) {
       System.out.println("Starting DB CLIENT span");
 
       Span span =
-          tracer
+          dbTracer
               .spanBuilder("query")
               .setSpanKind(SpanKind.CLIENT)
-              // new method: spans have types
-              .setType(InstrumentationType.DB)
               .startSpan();
-
-      Context context = span.storeInContext(Context.current());
-      propagator.inject(context, requestContext, setter);
-
       try (Scope scope = span.makeCurrent()) {
 
         System.out.printf("current %s-%s", Span.current().getSpanContext().getTraceId(), Span.current().getSpanContext().getSpanId());
 
+        propagator.inject(Context.current(), requestContext, setter);
+
         System.out.println(
             "Should start another DB span? "
-                + tracer.shouldStartSpan(SpanKind.CLIENT, InstrumentationType.DB, Context.current()));
+                + anotherDbTracer.shouldStartSpan(SpanKind.CLIENT, Context.current()));
 
         // efficient instrumentation should stop if shouldStartSpan returns false
         // but doesn't have to - nothing bad happens, it's just a bit less efficient
         Span duplicateSpan =
-            tracer
+            anotherDbTracer
                 .spanBuilder("query")
                 .setSpanKind(SpanKind.CLIENT)
-                .setType(InstrumentationType.DB)
                 .startSpan();
 
         // noop
@@ -90,19 +98,18 @@ class InstrumentationExample {
         // bad news: it's not super-efficient, so it's better to pre-check with shouldStartSpan
         System.out.println("DuplicateSpan isRecording? " + duplicateSpan.isRecording());
 
-        context = duplicateSpan.storeInContext(context);
+        Context context = duplicateSpan.storeInContext(Context.current());
         propagator.inject(context, requestContext, setter);
 
         // assuming new child (non-DB) span starts
         System.out.println(
             "Should start HTTP span? "
-                + tracer.shouldStartSpan(SpanKind.CLIENT, InstrumentationType.HTTP, context));
+                + httpTracer.shouldStartSpan(SpanKind.CLIENT, context));
 
         Span httpSpan =
-            tracer
+            httpTracer
                 .spanBuilder("HTTP POST")
                 .setSpanKind(SpanKind.CLIENT)
-                .setType(InstrumentationType.HTTP)
                 .setParent(context)
                 .startSpan();
 
