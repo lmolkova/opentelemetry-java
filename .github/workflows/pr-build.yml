@@ -19,7 +19,7 @@ jobs:
             testAdditionalJavaVersions: true
             coverage: true
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 0
       - id: setup-java-8
